@@ -26,7 +26,7 @@ Comprehensive analysis of 1M+ Aadhaar enrollment records, 2M+ demographic update
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/uidai-hackathon-2026.git
+git clone https://github.com/Anand-DN/-UIDAI-Data-Hackathon-2026---Aadhaar-Analysis.git
 cd uidai-hackathon-2026
 
 # Create virtual environment (recommended)
@@ -35,3 +35,35 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+
+# Place UIDAI CSV files in respective folders:
+# - data/enrolment/*.csv
+# - data/demographic/*.csv
+# - data/biometric/*.csv
+
+# Run complete analysis
+python main.py
+
+
+📁 **Project Structure**
+uidai-hackathon-2026/
+├── data/
+│   ├── enrolment/          # Enrollment CSV files
+│   ├── demographic/        # Demographic update CSVs
+│   └── biometric/          # Biometric update CSVs
+├── src/
+│   ├── config.py          # Configuration & paths
+│   ├── loader.py          # Data loading utilities
+│   ├── cleaning.py        # Data cleaning & standardization
+│   ├── analysis.py        # Basic statistical analysis
+│   ├── advanced_analysis.py   # Anomaly detection, compliance
+│   ├── visuals.py         # Basic visualizations
+│   ├── advanced_visuals.py    # Advanced charts
+│   └── report.py          # PDF generation
+├── outputs/
+│   ├── figures/           # Generated visualizations
+│   └── *.pdf             # Final report
+├── main.py               # Main execution script
+├── requirements.txt      # Python dependencies
+└── README.md            # This file
