@@ -37,12 +37,12 @@ def clean_dataset(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     if age_cols:
         df['Total_Enrollments'] = df[age_cols].sum(axis=1)
     
-    # 6. Extract temporal features
+    # 6. Extract temporal features  ✅ FIX HERE
     if DATE_COL in df.columns:
         df['Year'] = df[DATE_COL].dt.year
         df['Month'] = df[DATE_COL].dt.month
         df['Quarter'] = df[DATE_COL].dt.quarter
-        df['Year_Month'] = df[DATE_COL].dt.to_period('M')
+        df['Year_Month'] = df[DATE_COL].dt.to_period('M').astype(str)
     
     # 7. Remove duplicates
     df = df.drop_duplicates()
@@ -51,6 +51,7 @@ def clean_dataset(df: pd.DataFrame, dataset_name: str) -> pd.DataFrame:
     
     return df
 
+
 def standardize_state_names(df):
     """Fix inconsistent state names and remove invalid entries."""
     from .config import STATE_COL
@@ -58,39 +59,24 @@ def standardize_state_names(df):
     if STATE_COL not in df.columns:
         return df
     
-    # Mapping of inconsistent names to standard names
     state_mapping = {
-        # West Bengal variants
         'West Bangal': 'West Bengal',
         'Westbengal': 'West Bengal',
-        'West  Bengal': 'West Bengal',  # double space
-        
-        # Union territories
+        'West  Bengal': 'West Bengal',
         'Daman And Diu': 'Daman & Diu',
         'Dadra And Nagar Haveli And Daman And Diu': 'Dadra & Nagar Haveli',
         'The Dadra And Nagar Haveli And Daman And Diu': 'Dadra & Nagar Haveli',
-        
-        # Andaman & Nicobar
         'Andaman And Nicobar Islands': 'Andaman & Nicobar Islands',
         'Andaman & Nicobar': 'Andaman & Nicobar Islands',
-        
-        # Odisha (formerly Orissa)
         'Orissa': 'Odisha',
-        
-        # Invalid entries (numeric codes mistaken as states)
         '100000': 'INVALID',
         '10000': 'INVALID',
     }
     
-    # Apply standardization
     df[STATE_COL] = df[STATE_COL].replace(state_mapping)
-    
-    # Remove invalid entries
     df = df[df[STATE_COL] != 'INVALID']
-    
-    # Remove rows where state name is purely numeric (data error)
     df = df[~df[STATE_COL].str.match(r'^\d+$', na=False)]
     
-    print(f"   State names standardized")
+    print("   State names standardized")
     
     return df

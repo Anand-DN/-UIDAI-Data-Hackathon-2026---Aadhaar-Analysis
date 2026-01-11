@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# OS
+.DS_Store
+
+# Raw data (too large)
+#data/**/*.csv
+
+# Generated figures (keep PDFs, ignore plots)
+#outputs/figures/
