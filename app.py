@@ -133,117 +133,50 @@ with tab1:
                      color_continuous_scale='Viridis')
         st.plotly_chart(fig2, use_container_width=True)
 
-# TAB 2: ULTIMATE INDIA MAP - BULLETPROOF VERSION
+# TAB 2: INDIA MAP - DEPLOYMENT SAFE (NO ERRORS!)
 with tab2:
-    st.header("🗺️ **India Aadhaar Enrollment Heatmap 2026**")
-    st.markdown("**🔥 Interactive | State Labels | Top Stats | Production Ready**")
+    st.header("🗺️ **India Aadhaar Enrollment Heatmap**")
     
-    # Safe data preparation
-    map_data = filtered_df.groupby('state')['Total'].sum().reset_index()
-    if len(map_data) == 0:
-        st.warning("⚠️ No data available. Check filters.")
-        st.stop()
+    # Use FULL dataset
+    map_data = monthly_df.groupby('state')['Total'].sum().reset_index()
     
-    # FIXED: Calculate numeric values first
-    total_enrollments = map_data['Total'].sum()
-    map_data['share'] = map_data['Total'] / total_enrollments
-    map_data['rank'] = map_data['Total'].rank(ascending=False).astype(int)
-    
-    # FIXED: Proper customdata
-    custom_data = [[r, s] for r, s in zip(map_data['rank'], map_data['share'])]
-    
-    # Create stunning India map
-    fig_map = go.Figure()
-    fig_map.add_trace(go.Choropleth(
-        locations=map_data['state'],
-        z=map_data['Total'],
-        locationmode='country names',
-        colorscale='RdYlGn_r',
-        zmin=map_data['Total'].min(),
-        zmax=map_data['Total'].max(),
-        marker_line_color='darkgray',
-        marker_line_width=0.5,
-        colorbar=dict(
-            title="Enrollments",
-            titleside="right",
-            thickness=20,
-            len=0.7,
-            x=1.02
-        ),
-        hovertemplate='<b>%{locations}</b><br>' +
-                      'Enrollments: <b>%{z:,.0f}</b><br>' +
-                      'Rank: #%{customdata[0]}<br>' +
-                      'Share: %{customdata[1]:.1%}<extra></extra>',
-        customdata=custom_data
-    ))
-    
-    # Perfect India layout
-    fig_map.update_layout(
-        title={
-            'text': "🇮🇳 Aadhaar Enrollments by State - 2026",
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 24, 'color': '#2E86AB'}
-        },
-        geo=dict(
-            scope='asia',
-            projection_type='natural earth',
-            showframe=False,
-            showcoastlines=True,
-            coastlinecolor='white',
-            coastlinewidth=1,
-            showland=True,
-            landcolor='lightgray',
-            showlakes=True,
-            lakecolor='white',
-            bgcolor='rgba(0,0,0,0)'
-        ),
-        height=700,
-        margin={"r":0,"t":80,"l":0,"b":0},
-        font=dict(size=12),
-        plot_bgcolor='white'
+    # SIMPLEST WORKING MAP - NO colorbar issues
+    fig_map = px.choropleth(
+        map_data, 
+        locations="state",
+        color="Total",
+        locationmode="country names",
+        color_continuous_scale="Reds",
+        title="🇮🇳 Aadhaar Enrollments by State 2026"
     )
     
-    # FIXED: New Streamlit width parameter
+    # Clean layout
+    fig_map.update_layout(
+        height=600,
+        title_x=0.5,
+        geo=dict(scope="asia")
+    )
+    
     st.plotly_chart(fig_map, width="stretch")
     
-    # FIXED: Top 5 table - numeric calculations
-    st.markdown("### 🏆 **Top 5 States**")
-    top5_data = map_data.nlargest(5, 'Total')[['state', 'Total', 'share']].copy()
-    top5_data['Total'] = top5_data['Total'].apply(lambda x: f"{x:,.0f}")
-    top5_data['Share'] = top5_data['share'].apply(lambda x: f"{x:.1%}")
-    top5_display = top5_data[['state', 'Total', 'Share']].rename(columns={'state': 'State'})
-    st.dataframe(top5_display, use_container_width=True)
-    
-    # FIXED: Key metrics - proper numeric values
+    # Stats
+    col1, col2, col3 = st.columns(3)
     top_state = map_data.nlargest(1, 'Total').iloc[0]
-    top5_total = map_data.nlargest(5, 'Total')['Total'].sum()
     
-    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("🥇 #1 State", top_state['state'], f"{top_state['Total']:,.0f}")
+        st.metric("🥇 Top State", top_state['state'])
     with col2:
-        st.metric("📊 National Total", f"{total_enrollments:,.0f}")
+        st.metric("📊 Total", f"{int(map_data['Total'].sum()):,}")
     with col3:
-        st.metric("🔥 Top 5 Share", f"{top5_total/total_enrollments:.1%}")
-    with col4:
-        st.metric("🌟 Avg/State", f"{map_data['Total'].mean():,.0f}")
+        st.metric("🏆 States", len(map_data))
     
-    # Interactive controls
-    st.markdown("### 🎛️ **Map Settings**")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        top_n = st.slider("🏆 Show Top N States", 5, 15, 10)
-    with col_b:
-        color_scale = st.selectbox("🎨 Color Scale", 
-                                 ['RdYlGn_r', 'Viridis', 'Plasma', 'Hot', 'Blues'])
-    
-    # Full rankings table
-    st.markdown("### 📊 **State Rankings**")
-    rankings_data = map_data.nlargest(top_n, 'Total')[['state', 'Total', 'rank']].copy()
-    rankings_data.columns = ['State', 'Enrollments', 'Rank']
-    rankings_data['Enrollments'] = rankings_data['Enrollments'].apply(lambda x: f"{x:,.0f}")
-    st.dataframe(rankings_data, use_container_width=True)
+    # Rankings table
+    st.markdown("### 🏆 **Top 10 States**")
+    top10 = map_data.nlargest(10, 'Total')[['state', 'Total']].copy()
+    top10.columns = ['State', 'Enrollments']
+    top10['Enrollments'] = top10['Enrollments'].astype(int).apply(lambda x: f"{x:,}")
+    st.dataframe(top10, use_container_width=True)
+
 
 
 
@@ -361,3 +294,4 @@ with col3:
 if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
+
