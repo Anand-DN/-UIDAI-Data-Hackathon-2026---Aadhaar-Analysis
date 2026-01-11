@@ -189,7 +189,6 @@ with tab2:
 # TAB 3: STATES - **ALWAYS USES FULL DATA** ✅
 with tab3:
     st.header("🏛️ **State Deep Dive** ✅")
-    st.info("💡 **ALL STATES WORK** - Filters don't affect this tab")
     
     # Use FULL dataset - NO FILTERS
     state_sel = st.selectbox("Select State", sorted(monthly_df['state'].unique()), 
@@ -299,3 +298,4 @@ with col3:
 if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
+
