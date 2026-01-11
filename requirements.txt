@@ -1,7 +1,23 @@
+# Core
 pandas
 numpy
+
+# Visualization
 matplotlib
 seaborn
-scipy
+plotly
+
+# ML
+scikit-learn
+joblib
+
+# Web Apps
+streamlit
+gradio
+
+# PDF & Images
 fpdf2
 Pillow
+
+# Analysis
+scipy
