@@ -133,52 +133,57 @@ with tab1:
                      color_continuous_scale='Viridis')
         st.plotly_chart(fig2, use_container_width=True)
 
-# TAB 2: INDIA MAP - DEPLOYMENT SAFE (NO ERRORS!)
+# TAB 2: PERFECT INDIA RANKINGS - NO ERRORS!
 with tab2:
-    st.header("🗺️ **India Aadhaar Enrollment Heatmap**")
+    st.header("🇮🇳 **India Aadhaar State Rankings 2026**")
+    st.markdown("**🔥 Live Colors | Top States | Hackathon Ready**")
     
-    # Use FULL dataset
-    map_data = monthly_df.groupby('state')['Total'].sum().reset_index()
+    # FIXED: Proper nlargest syntax
+    state_data = monthly_df.groupby('state')['Total'].sum().reset_index()
+    top_states = state_data.nlargest(12, 'Total').sort_values('Total', ascending=True)
     
-    # SIMPLEST WORKING MAP - NO colorbar issues
-    fig_map = px.choropleth(
-        map_data, 
-        locations="state",
-        color="Total",
-        locationmode="country names",
-        color_continuous_scale="Reds",
-        title="🇮🇳 Aadhaar Enrollments by State 2026"
+    # BEAUTIFUL COLORED HORIZONTAL BARS
+    fig = px.bar(
+        top_states,
+        x='Total',
+        y='state',
+        orientation='h',
+        color='Total',
+        color_continuous_scale='Reds',
+        title="🏆 Top States by Aadhaar Enrollments (Dark Red = #1)",
+        labels={'Total': 'Enrollments', 'state': 'States'}
     )
     
-    # Clean layout
-    fig_map.update_layout(
-        height=600,
+    fig.update_layout(
+        height=550,
         title_x=0.5,
-        geo=dict(scope="asia")
+        coloraxis_colorbar=dict(title="Enrollments", thickness=25),
+        yaxis_title="",
+        xaxis_title="Enrollments"
     )
     
-    st.plotly_chart(fig_map, width="stretch")
+    st.plotly_chart(fig, width="stretch")
     
-    # Stats
-    col1, col2, col3 = st.columns(3)
-    top_state = map_data.nlargest(1, 'Total').iloc[0]
+    # LIVE METRICS
+    top1 = state_data.iloc[0]  # Get #1 state
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("🥇 Top State", top_state['state'])
+        st.metric("🥇 #1 State", top1['state'], f"{int(top1['Total']):,}")
     with col2:
-        st.metric("📊 Total", f"{int(map_data['Total'].sum()):,}")
+        st.metric("📊 National Total", f"{int(state_data['Total'].sum()):,}")
     with col3:
-        st.metric("🏆 States", len(map_data))
+        st.metric("🔥 Top 5 Share", f"{state_data.head(5)['Total'].sum()/state_data['Total'].sum():.1%}")
+    with col4:
+        st.metric("🏆 States", len(state_data))
     
-    # Rankings table
-    st.markdown("### 🏆 **Top 10 States**")
-    top10 = map_data.nlargest(10, 'Total')[['state', 'Total']].copy()
-    top10.columns = ['State', 'Enrollments']
-    top10['Enrollments'] = top10['Enrollments'].astype(int).apply(lambda x: f"{x:,}")
-    st.dataframe(top10, use_container_width=True)
-
-
-
+    # FULL RANKINGS TABLE
+    st.markdown("### 📊 **Complete Rankings**")
+    rankings = state_data.sort_values('Total', ascending=False).reset_index(drop=True)
+    rankings['Rank'] = rankings.index + 1
+    rankings['Enrollments'] = rankings['Total'].astype(int).apply(lambda x: f"{x:,}")
+    display_df = rankings[['Rank', 'state', 'Enrollments']].rename(columns={'state': 'State'})
+    st.dataframe(display_df, use_container_width=True)
 
 
 # TAB 3: STATES - **ALWAYS USES FULL DATA** ✅
@@ -294,4 +299,3 @@ with col3:
 if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
-
