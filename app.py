@@ -133,62 +133,64 @@ with tab1:
                      color_continuous_scale='Viridis')
         st.plotly_chart(fig2, use_container_width=True)
 
-# TAB 2: PERFECT INDIA RANKINGS - NO ERRORS!
+import requests
+
+# TAB 2: INDIA MAP WITH LOCAL GEOJSON FILE
 with tab2:
-    st.header("🇮🇳 **India Aadhaar State Rankings 2026**")
-    st.markdown("**🔥 Live Colors | Top States | Hackathon Ready**")
+    st.header("🗺️ **India Aadhaar Enrollment Heatmap**")
     
-    # FIXED: Proper nlargest syntax
-    state_data = monthly_df.groupby('state')['Total'].sum().reset_index()
-    top_states = state_data.nlargest(12, 'Total').sort_values('Total', ascending=True)
+    map_data = monthly_df.groupby('state')['Total'].sum().reset_index()
     
-    # BEAUTIFUL COLORED HORIZONTAL BARS
-    fig = px.bar(
-        top_states,
-        x='Total',
-        y='state',
-        orientation='h',
-        color='Total',
-        color_continuous_scale='Reds',
-        title="🏆 Top States by Aadhaar Enrollments (Dark Red = #1)",
-        labels={'Total': 'Enrollments', 'state': 'States'}
+    # Load local GeoJSON file
+    import json
+    try:
+        with open('india_states.json', 'r') as f:
+            india_geojson = json.load(f)
+    except:
+        st.error("⚠️ india_states.json file not found. Download from link above.")
+        st.stop()
+    
+    # CREATE PERFECT MAP
+    fig_map = px.choropleth(
+        map_data,
+        geojson=india_geojson,
+        locations="state",
+        featureidkey="properties.ST_NM",
+        color="Total",
+        color_continuous_scale="Blues",
+        title="🇮🇳 Aadhaar Enrollments by State",
+        labels={'Total': 'Enrollments'}
     )
     
-    fig.update_layout(
-        height=550,
+    fig_map.update_geos(fitbounds="locations", visible=False)
+    fig_map.update_layout(
+        height=650,
         title_x=0.5,
-        coloraxis_colorbar=dict(title="Enrollments", thickness=25),
-        yaxis_title="",
-        xaxis_title="Enrollments"
+        coloraxis_colorbar=dict(title="Enrollments", thickness=20, len=0.6)
     )
     
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig_map, width="stretch")
     
-    # LIVE METRICS
-    top1 = state_data.iloc[0]  # Get #1 state
-    col1, col2, col3, col4 = st.columns(4)
-    
+    # Metrics & Table
+    top_state = map_data.nlargest(1, 'Total').iloc[0]
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("🥇 #1 State", top1['state'], f"{int(top1['Total']):,}")
+        st.metric("🥇 #1 State", top_state['state'])
     with col2:
-        st.metric("📊 National Total", f"{int(state_data['Total'].sum()):,}")
+        st.metric("📊 Total", f"{int(map_data['Total'].sum()):,}")
     with col3:
-        st.metric("🔥 Top 5 Share", f"{state_data.head(5)['Total'].sum()/state_data['Total'].sum():.1%}")
-    with col4:
-        st.metric("🏆 States", len(state_data))
+        st.metric("🏆 States", len(map_data))
     
-    # FULL RANKINGS TABLE
-    st.markdown("### 📊 **Complete Rankings**")
-    rankings = state_data.sort_values('Total', ascending=False).reset_index(drop=True)
-    rankings['Rank'] = rankings.index + 1
-    rankings['Enrollments'] = rankings['Total'].astype(int).apply(lambda x: f"{x:,}")
-    display_df = rankings[['Rank', 'state', 'Enrollments']].rename(columns={'state': 'State'})
-    st.dataframe(display_df, use_container_width=True)
+    st.markdown("### 🏆 Top 10 States")
+    top10 = map_data.nlargest(10, 'Total').copy()
+    top10['Enrollments'] = top10['Total'].astype(int).apply(lambda x: f"{x:,}")
+    st.dataframe(top10[['state', 'Enrollments']].rename(columns={'state': 'State'}), use_container_width=True)
 
 
 # TAB 3: STATES - **ALWAYS USES FULL DATA** ✅
 with tab3:
     st.header("🏛️ **State Deep Dive** ✅")
+    st.info("💡 **ALL STATES WORK** - Filters don't affect this tab")
     
     # Use FULL dataset - NO FILTERS
     state_sel = st.selectbox("Select State", sorted(monthly_df['state'].unique()), 
@@ -298,4 +300,3 @@ with col3:
 if st.sidebar.button("🔄 Refresh Data", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
-
